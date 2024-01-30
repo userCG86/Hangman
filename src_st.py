@@ -2,7 +2,7 @@ import streamlit as st
 import random
 import string
 import requests
-
+from img import case
 
 @st.cache_data
 def get_word_list():
