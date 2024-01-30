@@ -1,5 +1,6 @@
 import streamlit as st
 from img import case
+from src_st import get_word_list, start_game
 
 if "words" not in st.session_state:
     st.session_state.words = {}
