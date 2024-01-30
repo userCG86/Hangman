@@ -24,11 +24,19 @@ if st.session_state.words["word"] != '':
         with placeholder.container():
             st.text(case[st.session_state.words["counter"]])
             f'WINNER! The secret word was {st.session_state.words["word"]}'
+            st.button("Play again?", key="winner")
+            if st.session_state.winner:
+                st.session_state.clear()
+                st.rerun()
     elif st.session_state.words["counter"] < 0:
         placeholder.empty()
         with placeholder.container():
             st.text(case[st.session_state.words["counter"]])
-            f'The secret word was {st.session_state.words["word"]}'        
+            f'The secret word was {st.session_state.words["word"]}'     
+            st.button("Play again?", key="loser")
+            if st.session_state.loser:
+                st.session_state.clear()
+                st.rerun()
     if st.session_state.reset:
         st.session_state.clear()
         st.rerun()
