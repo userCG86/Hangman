@@ -1,88 +1,89 @@
+import streamlit as st
 import random
 import string
-import time
 import requests
-from IPython.display import clear_output
 from img import case
 
+@st.cache_data
 def get_word_list():
-  response = requests.get("https://raw.githubusercontent.com/userCG86/Hangman/main/list_of_words.txt?token=GHSAT0AAAAAACCWVZJHWCA3QOADW4HVMOGKZDMX44Q")
-  if response.status_code == 200:
-      return response.content.decode()
-  else:
-      print(f"Warning! Error in loading word list: {response.status_code}")
+    listy = st.empty()
+    listy.write("Getting list")
+    response = requests.get("https://raw.githubusercontent.com/userCG86/Hangman/main/list_of_words.txt?token=GHSAT0AAAAAACCWVZJHWCA3QOADW4HVMOGKZDMX44Q")
+    if response.status_code == 200:
+        listy.empty()
+        return response.content.decode()
+    else:
+        f"Warning! Error in loading word list: {response.status_code}"
 
 def get_word():
-  secret_word = input().upper()
-  for letter in secret_word:
-    if (letter not in string.ascii_uppercase):
-      print(f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business.")
-      return None
-  return secret_word
+    player_input = st.empty()
+    secret_word = player_input.text_input('Guessing player must look away.\nNow give me your secret word!', key="secret").upper()
+    for letter in secret_word:
+        if (letter not in string.ascii_uppercase):
+            st.write(f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business.")
+            return ''
+    return secret_word
 
 def get_random_word(all_words):
-  return random.choice(all_words.split('\n'))
+    return random.choice(all_words.split('\n'))
+
+def game_state(hash_word, counter, guesses):
+    game_state = st.empty()
+    with game_state.container():
+        st.write(f"The secret word is {hash_word}")
+        st.text(case[counter])
+        st.write(f"Used letters: {''.join(sorted(list(guesses)))}")
 
 def guess_letter(word, hash_word, counter, guesses):
-  letter = input('Pick a letter:\n')
-  try:
-    letter = letter.upper()
-    letter = letter[0]
-  except:
+    
+    player_guess = st.empty()
+    with player_guess.container():
+        game_state(hash_word, counter, guesses)
+        letter = st.text_input('Pick a letter:\n', key="letter_pick", placeholder=None, max_chars=1)
+    try:
+        letter = letter.upper()
+        letter = letter[0]
+    except:
+        return hash_word, counter, guesses
+
+    if letter not in string.ascii_uppercase:
+        f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business."
+        letter = ''
+
+    elif letter in guesses:
+        f"Whoa there, Partner! You already guessed {letter}. Don't throw away your chances."
+        letter = ''
+
+    elif letter in word:
+        f"YES! {letter} is in the secret word."
+        for i in range(len(word)):
+            if letter == word[i]:
+                hash_word = hash_word[:i] + letter + hash_word[i+1:]
+    else:
+        f"WRONG! Number of mistakes left: {counter}"
+        counter -= 1
+
+    guesses += letter
+    with player_guess.container():
+        game_state(hash_word, counter, guesses)
+
     return hash_word, counter, guesses
 
-  if letter not in string.ascii_uppercase:
-    print(f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business.")
-    letter = ''
+def start_game(all_words):
+    players = st.empty()
+    counter = 5
+    guesses = ''
+    word = ''
+    with players.container():
+        n_players = st.selectbox("Alright, Partner. How many players this time?", ["None", "Single player", "Multiplayer"])
+        if n_players == "Multiplayer":
+            word = get_word()
+        elif n_players == "Single player":
+            word = get_random_word(all_words)
 
-  elif letter in guesses:
-    print(f"Whoa there, Partner! You already guessed {letter}. Don't throw away your chances.")
-    letter = ''
-
-  elif letter in word:
-    print(f"YES! {letter} is in the secret word.")
-    for i in range(len(word)):
-      if letter == word[i]:
-        hash_word = hash_word[:i] + letter + hash_word[i+1:]
-  else:
-    print(f"WRONG! Number of mistakes left: {counter}")
-    counter -= 1
-
-  guesses += letter
-  time.sleep(1.5)
-  
-  return hash_word, counter, guesses
-
-def play_hangman():
-  try:
-    all_words
-  except:
-    all_words = get_word_list()
-  word = None
-  counter = 5
-  guesses = ''
-
-  n_players = input("Alright, Partner. How many players this time?\n")
-  if n_players.isnumeric() and int(n_players) > 1:
-    print('Guessing player must look away.\nNow give me your secret word!')
-    while word == None:
-      word = get_word()
-  else:
-    word = get_random_word(all_words)
-  hash_word = '-'*len(word)
-  
-  while (counter >= 0) & (hash_word != word):
-    clear_output(wait=False)
-    print(f"The secret word is {hash_word}")
-    print(case[counter])
-    print(f"Used letters: {''.join(sorted(list(guesses)))}")
-    hash_word, counter, guesses = guess_letter(word, hash_word, counter, guesses)
-
-  if hash_word == word:
-    clear_output(wait=False)
-    print(case[counter])
-    print(f"WINNER! The secret word was {word}")
-  else:
-    clear_output(wait=False)
-    print(case[-1])
-    print(f"The secret word was {word}")
+    if word != '':
+        hash_word = '-'*len(word)
+        players.empty()
+        return counter, guesses, word, hash_word
+    else:
+        return 5, '', '', ''
