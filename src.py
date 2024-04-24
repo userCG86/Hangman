@@ -8,7 +8,7 @@ from img import case
 def get_word_list():
     listy = st.empty()
     listy.write("Getting list")
-    response = requests.get("https://raw.githubusercontent.com/userCG86/Hangman/main/list_of_words.txt?token=GHSAT0AAAAAACCWVZJHWCA3QOADW4HVMOGKZDMX44Q")
+    response = requests.get("https://raw.githubusercontent.com/userCG86/Hangman/main/list_of_words.txt")
     if response.status_code == 200:
         listy.empty()
         return response.content.decode()
