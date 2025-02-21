@@ -14,6 +14,7 @@ if len(st.session_state.words) == 0 or st.session_state.words["word"] == '':
         st.session_state.words["guesses"] = guesses
         st.session_state.words["word"] = word
         st.session_state.words["hash_word"] = hash_word
+        
 
 if st.session_state.words["word"] != '':
     with placeholder.container():

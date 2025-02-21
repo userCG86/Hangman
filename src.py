@@ -17,7 +17,7 @@ def get_word_list():
 
 def get_word():
     player_input = st.empty()
-    secret_word = player_input.text_input('Guessing player must look away.\nNow give me your secret word!', key="secret").upper()
+    secret_word = player_input.text_input("Mark your word, Partner.", key="secret", type="password").upper()
     for letter in secret_word:
         if (letter not in string.ascii_uppercase):
             st.write(f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business.")
@@ -27,18 +27,19 @@ def get_word():
 def get_random_word(all_words):
     return random.choice(all_words.split('\n'))
 
-def game_state(hash_word, counter, guesses):
+def game_state(hash_word, counter, guesses, message=""):
     game_state = st.empty()
     with game_state.container():
         st.write(f"The secret word is {hash_word}")
         st.text(case[counter])
         st.write(f"Used letters: {''.join(sorted(list(guesses)))}")
+        st.write(message)
 
-def guess_letter(word, hash_word, counter, guesses):
-    
+def guess_letter(word, hash_word, counter, guesses): 
+    message = ""
     player_guess = st.empty()
     with player_guess.container():
-        game_state(hash_word, counter, guesses)
+        game_state(hash_word, counter, guesses, message)
         letter = st.text_input('Pick a letter:\n', key="letter_pick", placeholder=None, max_chars=1)
     try:
         letter = letter.upper()
@@ -47,26 +48,25 @@ def guess_letter(word, hash_word, counter, guesses):
         return hash_word, counter, guesses
 
     if letter not in string.ascii_uppercase:
-        f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business."
+        message = f"Out of bounds, Partner. Stick to A-Z, no special characters, diacritics, or other funny business."
         letter = ''
 
     elif letter in guesses:
-        f"Whoa there, Partner! You already guessed {letter}. Don't throw away your chances."
+        message = f"Whoa there, Partner! You already guessed '{letter}'. Don't throw away your chances."
         letter = ''
 
     elif letter in word:
-        f"YES! {letter} is in the secret word."
+        message = f"YES! {letter} is in the secret word."
         for i in range(len(word)):
             if letter == word[i]:
                 hash_word = hash_word[:i] + letter + hash_word[i+1:]
     else:
-        f"WRONG! Number of mistakes left: {counter}"
+        message = f"WRONG! Number of mistakes left: {counter}"
         counter -= 1
 
     guesses += letter
     with player_guess.container():
-        game_state(hash_word, counter, guesses)
-
+        game_state(hash_word, counter, guesses, message)
     return hash_word, counter, guesses
 
 def start_game(all_words):
